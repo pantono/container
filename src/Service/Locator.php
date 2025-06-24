@@ -197,17 +197,21 @@ class Locator implements LocatorInterface
         if (!$constructor) {
             return new $className();
         }
-
-        $deps = [];
-        foreach ($constructor->getParameters() as $index => $parameter) {
-            if ($parameter->getType() instanceof ReflectionNamedType) {
-                $dep = $this->locateDependencyByClassName($parameter->getType()->getName());
-                if (!$dep) {
-                    throw new \Exception('Unable to locate dependency ' . $parameter->getType()->getName());
+        $service = $this->collection->getServiceByClass($className);
+        if ($service) {
+            $deps = $service->getDependencies();
+        } else {
+            $deps = [];
+            foreach ($constructor->getParameters() as $index => $parameter) {
+                if ($parameter->getType() instanceof ReflectionNamedType) {
+                    $dep = $this->locateDependencyByClassName($parameter->getType()->getName());
+                    if (!$dep) {
+                        throw new \Exception('Unable to locate dependency ' . $parameter->getType()->getName());
+                    }
+                    $deps[] = $dep;
+                } else {
+                    throw new \Exception('Cannot instantiate parameter ' . $index . ' on ' . $className . ' due to having no type');
                 }
-                $deps[] = $dep;
-            } else {
-                throw new \Exception('Cannot instantiate parameter ' . $index . ' on ' . $className . ' due to having no type');
             }
         }
 
