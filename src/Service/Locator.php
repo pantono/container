@@ -198,10 +198,12 @@ class Locator implements LocatorInterface
             return new $className();
         }
         $service = $this->collection->getServiceByClass($className);
+        $deps = [];
         if ($service) {
-            $deps = $service->getDependencies();
+            foreach ($service->getDependencies() as $dep) {
+                $deps[] = $this->loadDependency($dep);
+            }
         } else {
-            $deps = [];
             foreach ($constructor->getParameters() as $index => $parameter) {
                 if ($parameter->getType() instanceof ReflectionNamedType) {
                     $dep = $this->locateDependencyByClassName($parameter->getType()->getName());
@@ -214,6 +216,7 @@ class Locator implements LocatorInterface
                 }
             }
         }
+
 
         return $reflection->newInstanceArgs($deps);
     }
