@@ -199,7 +199,7 @@ class Locator implements LocatorInterface
         }
         $service = $this->collection->getServiceByClass($className);
         $deps = [];
-        if ($service) {
+        if ($service && !empty($service->getDependencies())) {
             foreach ($service->getDependencies() as $dep) {
                 $deps[] = $this->loadDependency($dep);
             }
