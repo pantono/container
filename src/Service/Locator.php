@@ -15,6 +15,7 @@ use Pantono\Contracts\Locator\FactoryInterface;
 use Pantono\Database\Connection\ConnectionCollection;
 use ReflectionClass;
 use Pantono\Container\Container;
+use Pantono\Contracts\Attributes\DatabaseConnectionName;
 
 class Locator implements LocatorInterface
 {
@@ -148,20 +149,26 @@ class Locator implements LocatorInterface
             return null;
         }
         $parents = [];
-        $parent = $reflectionClass->getParentClass();
-        while ($parent) {
-            $parents[] = $parent->getName();
-            $parent = $parent->getParentClass();
+        $databaseConnection = null;
+        foreach ($reflectionClass->getAttributes(DatabaseConnectionName::class) as $attribute) {
+            $databaseConnection = $connectionCollection->getConnectionByName($attribute->newInstance()->name);
         }
-        if (!in_array(AbstractPdoRepository::class, $parents)) {
-            return null;
+        if (!$databaseConnection) {
+            $parent = $reflectionClass->getParentClass();
+            while ($parent) {
+                $parents[] = $parent->getName();
+                $parent = $parent->getParentClass();
+            }
+            if (!in_array(AbstractPdoRepository::class, $parents)) {
+                return null;
+            }
+            $databaseConnection = $connectionCollection->getConnectionForParent($reflectionClass->getParentClass()->getName());
         }
-        $connection = $connectionCollection->getConnectionForParent($reflectionClass->getParentClass()->getName());
 
         /**
          * @var AbstractPdoRepository $connection
          */
-        $connection = $reflectionClass->newInstanceArgs([$connection]);
+        $connection = $reflectionClass->newInstanceArgs([$databaseConnection]);
         return $connection;
     }
 
