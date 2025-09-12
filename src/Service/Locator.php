@@ -66,6 +66,12 @@ class Locator implements LocatorInterface
                         return $locatedDependency;
                     }
                 }
+                if (str_starts_with($dependency, '$')) {
+                    $locatedDependency = $this->container->getConfig()->getConfigForType('config')->getValue(substr($dependency, 1));
+                    if ($locatedDependency) {
+                        return $locatedDependency;
+                    }
+                }
                 throw new ServiceNotRegistered('Service ' . $dependency . ' does not exist');
             }
             if (!class_exists($service->getClassName())) {
@@ -224,8 +230,18 @@ class Locator implements LocatorInterface
             }
         }
 
+        $isFactory = false;
+        foreach ($reflection->getInterfaceNames() as $interfaceName) {
+            if ($interfaceName === FactoryInterface::class) {
+                $isFactory = true;
+            }
+        }
+        if ($isFactory === false) {
+            return $reflection->newInstanceArgs($deps);
+        }
 
-        return $reflection->newInstanceArgs($deps);
+        $class = $reflection->newInstanceArgs($deps);
+        return $class->createInstance();
     }
 
     public function loadClass(string $className, array $dependencies): mixed
