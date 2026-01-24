@@ -8,7 +8,7 @@
     "pantono/utilities": "^1.0",
     "pimple/pimple": "^3.5",
     "pantono/database": "^1.0",
-    "symfony/event-dispatcher": "^7.0",
+    "symfony/event-dispatcher": "^8.0",
     "pantono/hydrator": "^1.0"
   },
   "require-dev": {
