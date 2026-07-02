@@ -16,6 +16,7 @@ use Pantono\Database\Connection\ConnectionCollection;
 use ReflectionClass;
 use Pantono\Container\Container;
 use Pantono\Contracts\Attributes\DatabaseConnectionName;
+use Pantono\Contracts\Attributes\ServiceName;
 
 class Locator implements LocatorInterface
 {
@@ -218,7 +219,15 @@ class Locator implements LocatorInterface
             }
         } else {
             foreach ($constructor->getParameters() as $index => $parameter) {
-                if ($parameter->getType() instanceof ReflectionNamedType) {
+                $serviceAttributeName = $parameter->getAttributes(ServiceName::class);
+                if (!empty($serviceAttributeName)) {
+                    $name = $serviceAttributeName[0]->newInstance()->name;
+                    $dep = $this->loadDependency($name);
+                    if (!$dep) {
+                        throw new \Exception('Unable to locate dependency ' . $name);
+                    }
+                    $deps[] = $dep;
+                } elseif ($parameter->getType() instanceof ReflectionNamedType) {
                     $dep = $this->locateDependencyByClassName($parameter->getType()->getName());
                     if (!$dep) {
                         throw new \Exception('Unable to locate dependency ' . $parameter->getType()->getName());

@@ -18,6 +18,7 @@ use Pantono\Container\Service\Tests\Mocks\TestLinkedService;
 use Pantono\Container\Container;
 use Pantono\Contracts\Config\FileInterface;
 use Pantono\Contracts\Config\ConfigInterface;
+use Pantono\Container\Service\Tests\Mocks\TestAttributeServiceName;
 
 class LocatorTest extends TestCase
 {
@@ -107,6 +108,18 @@ class LocatorTest extends TestCase
         $this->container['service_DatabaseConnectionCollection'] = $connectionCollection;
 
         $this->assertEquals(new TestRepositoryInjected(new TestRepository($dbMock)), $this->getLocator()->loadDependency('test'));
+    }
+
+    public function testLocatorServiceNameConstructorParameter()
+    {
+        $mockService = new Service('TestService', TestLocateModel::class, []);
+        $this->serviceCollection->addService($mockService);
+        $this->serviceCollection->expects($this->once())
+            ->method('getServiceByName')
+            ->with('TestService')
+            ->willReturn($mockService);
+        $expected = new TestAttributeServiceName(new TestLocateModel());
+        $this->assertEquals($expected, $this->getLocator()->getClassAutoWire(TestAttributeServiceName::class));
     }
 
     private function getLocator(): Locator
